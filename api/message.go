@@ -9,11 +9,9 @@ import (
 	"portfolio-send-message/storage"
 
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
-func makeBotStayActive(){
-
-}
 
 var(
 	BOT_TOKEN string	
@@ -32,7 +30,7 @@ func loadEnvs() error{
 	return nil
 }
 
-func main(){
+func ServeMessage(){
 	err := loadEnvs()
 	if err != nil{
 		log.Println(err)
@@ -48,7 +46,8 @@ func main(){
 	service := service.NewService(storage)
 	handler := handler.NewHanlder(service)
 
-	http.HandleFunc("/message", handler.HandleAddMessage)
-
-	http.ListenAndServe(":8080", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handler.HandleAddMessage)
+	corsHandler := cors.Default().Handler(mux)
+	http.ListenAndServe(":8080", corsHandler)
 }

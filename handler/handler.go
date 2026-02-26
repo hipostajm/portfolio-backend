@@ -44,7 +44,7 @@ func (h *Handler)handleAddMessagePost(w http.ResponseWriter, r *http.Request){
 	err = h.service.AddMessage(messageInput)
 	if err != nil{
 		log.Println(err)
-		writeResponse(w, false,err.Error(), http.StatusInternalServerError)
+		writeResponse(w, false,"Internal server error", http.StatusInternalServerError)
 		return
 	}
 	

@@ -1,10 +1,10 @@
 package model
 
 type Output struct{
-	Sucess bool `json:"sucess"`
+	Success bool `json:"success"`
 	Error string `json:"error"`
 }
 
 func NewOuput(sucess bool, error string) Output{
-	return Output{Sucess: sucess, Error: error}
+	return Output{Success: sucess, Error: error}
 }
