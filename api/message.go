@@ -1,53 +1,30 @@
-package main
+package handler
 
 import (
-	"log"
-	"net/http"
-	"os"
-	"portfolio-send-message/handler"
-	"portfolio-send-message/service"
-	"portfolio-send-message/storage"
-
-	"github.com/joho/godotenv"
-	"github.com/rs/cors"
+    "net/http"
+    "os"
+    "portfolio-send-message/handler"
+    "portfolio-send-message/service"
+    "portfolio-send-message/storage"
+    "github.com/rs/cors"
 )
 
+func Handler(w http.ResponseWriter, r *http.Request) {
+    botToken := os.Getenv("BOT_TOKEN")
+    channelID := os.Getenv("CHANNEL_ID")
 
-var(
-	BOT_TOKEN string	
-	CHANNEL_ID string
-)
+    storage, err := storage.NewDiscordStorage(botToken, channelID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
 
-func loadEnvs() error{
-	err := godotenv.Load()
-	if err != nil{
-		return err
-	}
-	
-	BOT_TOKEN = os.Getenv("BOT_TOKEN")
-	CHANNEL_ID = os.Getenv("CHANNEL_ID")
-	
-	return nil
-}
+    svc := service.NewService(storage)
+    h := handler.NewHanlder(svc)
 
-func ServeMessage(){
-	err := loadEnvs()
-	if err != nil{
-		log.Println(err)
-		return
-	}
-	storage, err := storage.NewDiscordStorage(BOT_TOKEN, CHANNEL_ID);
-	
-	if err != nil {
-		log.Println(err)
-		return
-	}
+    mux := http.NewServeMux()
+    mux.HandleFunc("/", h.HandleAddMessage)
 
-	service := service.NewService(storage)
-	handler := handler.NewHanlder(service)
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", handler.HandleAddMessage)
-	corsHandler := cors.Default().Handler(mux)
-	http.ListenAndServe(":8080", corsHandler)
+    corsHandler := cors.Default().Handler(mux)
+    corsHandler.ServeHTTP(w, r)
 }
